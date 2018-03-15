@@ -12,6 +12,7 @@ os.chdir(dirname): 改变工作目录到dirname
 getatime(path):文件或文件夹的最后访问时间，从新纪元到访问时的秒数
 getmtime(path):文件或文件夹的最后修改时间
 getctime(path):文件或文件夹的创建时间
+
  
 os.path模块:
 os.path.isfile()和os.path.isdir()函数分别检验给出的路径是一个文件还是目录,返回bool值
