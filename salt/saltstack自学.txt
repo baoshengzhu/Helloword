@@ -1,0 +1,195 @@
+[grain 用途]
+自定义标签：
+vi /etc/salt/grains 
+web: nginx
+重启minion
+
+salt -G web:nginx cmd.run 'w'
+
+salt 'minion' grain.get os:Centos
+
+vi top.sls
+base:
+  'web:nginx':
+    - match: grain
+    - apache
+
+
+salt '*' state.highstate
+
+[pillar]
+master.conf打开pillar
+
+
+salt '*' pillar.items
+salt '*' saltutil.refresh_pillar
+salt -I 'apache:httpd' test.ping
+
+
+
+base:
+  'web1-(prod|devel)':
+    - match: pcre
+    - webserver
+
+
+  
+ 执行高配置信息前测试加test=True
+ salt '*' state.highstate test=True
+
+
+
+vi sysctl.sls
+vm.swappiness:
+  sysctl.present:
+    - value: 0
+
+net.ipv4.ip_local_port_range:
+  sysctl.present
+    - value: 10000 65000
+
+fs.file-max:
+  sysctl.present:
+    - value: 100000
+
+
+
+
+cat env_init.sls
+include:
+  - init.dns
+  - init.history
+  - init.audit
+  - init.sysctl
+
+
+vi top.sls
+base:
+  '*':
+    - init.env_init
+
+192.168.250.137
+
+
+
+cd /usr/local/soft && tar -zxvf haproxy-1.6.2.tar.gz && make TARGET=linux26 PREFIX=/usr/local/haproxy && make install  PREFIX=/usr/local/haproxy
+
+
+vim /usr/local/src/haproxy-1.6.2/examples/haproxy.init
+
+修改路径
+BIN=/usr/local/haproxy/sbin/$BASENAME
+
+
+指定执行某个环节的sls文件
+ salt 'cs-01' state.sls haproxy.install saltenv=prod
+
+salt-cp '*' install.log /tmp/install.log
+------------
+ 流程、沉淀、标准 、能力 
+ 
+ 员岗
+
+
+ python-setproctite
+
+
+自定义grains
+ mkdir /srv/salt/base/_grains
+  vim my_grains.py
+  #!/usr/bin/env python
+  def my_grains():
+    '''
+     my custom grains
+   '''
+    grains = { 'kye1':'value1','key2':'value2'}
+    return grains
+
+
+  
+
+执行  salt '*' saltutil.sync_grains
+
+存放在: /var/cache/salt/minion/extmods/grains 
+
+
+自定义模块
+mkdir /srv/salt/base/_modules
+
+vim my_disk.py
+def list():
+  cmd = 'df -h'
+  ret = __salt__['cmd.run'](cmd)
+  return ret
+
+
+ salt '*' saltutil.sync_modules
+
+
+ ----------
+ etcd
+  
+  tar zxvf etcd-v2.2.1-linux-adm64.tar.gz
+  cd etcd-v2.2.1-linux-adm64
+  cp etcd etcdctl /usr/local/bin/
+  
+ etcd --name auto_scale --data-dir /data/etcd/ \
+ --listen-peer-urls 'http://10.0.0.7:2380,http://10.0.0.7:7001' \
+ --listen-client-urls 'http://10.0.0.7:2379,http://10.0.0.7:4001' \
+ --advertise-client-urls 'http://10.0.0.7:2379,http://10.0.0.7:4001' \
+
+ curl -s http://IP:2379/v2/keys/message -XPUT -d value="hello world"|python -m json.tool
+
+ curl -s http://IP:2379/v2/keys/message | python -m json.tool
+
+ curl -s http://IP:2379/v2/keys/message -XDELETE| python -m json.tool
+
+
+  curl -s http://IP:2379/v2/keys/ttl_use -XPUT -d value="hello world 1" -d ttl=60|python -m json.tool
+  
+ curl -s http://IP:2379/v2/keys/ttl_use | python -m json.tool
+
+
+
+curl -s http://IP:2379/v2/keys/salt/haproxy/backend_www_oldboyedu_com/web-node1 -XPUT -d value="10.10.202.183:8090"|python -m json.tool
+
+
+参考链接:http://blog.51cto.com/chenjisong/1714341
+
+
+
+
+
+   rpm -ivh http://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-7-11.noarch.rpm
+   yum install python-imaging 
+
+cobbler profile edit --name=CentOS-7.4-x86_64 --kickstart=/var/lib/cobbler/kickstarts/CentOS-7.4-x86_64.cfg
+cobbler profile edit --name=CentOS-7.4-x86_64 --kopts='net.ifnames=0 biosdevname=0'
+
+
+00:0C:29:4C:AE:1E
+cobbler system add --name=benson --mac=00:50:56:22:55:D8 --profile=CentOS-7.4-x86_64  \
+--ip-address=192.168.132.133 --subnet=255.255.255.0 --gateway=192.168.132.2 --interface=eth0  \
+--static=1 --hostname=benson-cobber-test --name-servers="114.114.114.114 8.8.8.8"
+
+cobbler system list
+
+
+
+=============
+yum install python-paramiko -y
+
+
+
+
+pip install django-formtools==2.1  XADMIN的后台管理系统对这个包的版本号有要求，官网没有提到的坑。否则会报错：from formtools.wizard.storage import get_storage
+
+
+
+salt 'salt-minion01' sys.list_modules可以列出所有的模块
+salt 'salt-minion01' sys.list_functions grains 可以列出具体模块(如test模块)的所有函数
+使用命令salt 'salt-minion01' sys.doc test可以列出具体模块(如test模块)全部函数的帮助及示例，若指定模块的具体函数，则可以单独查看该函数(如test.ping)的帮助及示例，类似查看man手册
+
+cmd模块有不少函数，本节主要测试的是cmd.run、cmd.run_bg、cmd.script三个函数的使用
+cmd.run的命令中若使用了awk，则$符前面需要加转义符
+cp.get_file、cp.get_dir、cp.push、cp.push_dir四个函数的使用
